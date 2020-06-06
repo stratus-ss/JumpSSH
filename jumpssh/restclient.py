@@ -123,7 +123,7 @@ class RestSshClient(object):
         # build body
         if kwargs.get('local_file'):
             local_file = kwargs.get('local_file')
-            if not os.path.exists(local_file) or not os.path.isfile(local_file):
+            if not (os.path.exists(local_file) and os.path.isfile(local_file)):
                 raise exception.RestClientError("Invalid file path given '%s'" % local_file)
             sftp_client = self.ssh_session.get_sftp_client()
             file_name = os.path.basename(local_file)
@@ -147,7 +147,7 @@ class RestSshClient(object):
         # most of successful commands will return exit code 0
         # except when using HEAD http method as file transfer is shorter or larger than expected
         # curl is returning exit code 18 : CURLE_PARTIAL_FILE (18)
-        if exit_code != 0 and not (exit_code == 18 and method.upper() == 'HEAD'):
+        if not (exit_code == 0 or (exit_code == 18 and method.upper() == 'HEAD')):
             raise exception.RestClientError(
                 '"Remote command ({command})" returned exit status ({exit_code}): {error}'.format(
                     exit_code=exit_code, command=cmd, error=output)
